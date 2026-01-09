@@ -1,8 +1,18 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import pandas as pd
 
 app = FastAPI()
+
+# 🔓 Enable browser access (VERY IMPORTANT)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Load models
 match_model = joblib.load("match_winner_model.pkl")
@@ -48,16 +58,20 @@ def predict(team1:str, team2:str):
         team2: round((1-prob)*100,2)
     }
 
-# ---------- LIVE PREDICTION ----------
+# ---------- LIVE MATCH ----------
 @app.get("/live_predict")
 def live_predict(runs:int, overs:float, wickets:int, target:int):
 
-    balls = int(overs * 6)
-    balls_left = 120 - balls
+    # Fix 10.2 overs bug
+    ov = int(overs)
+    balls = int((overs - ov) * 10)
+    balls_bowled = ov * 6 + balls
+
+    balls_left = 120 - balls_bowled
     runs_left = target - runs
     wickets_left = 10 - wickets
 
-    current_rr = runs / (balls/6)
+    current_rr = runs / (balls_bowled/6)
     required_rr = runs_left / (balls_left/6)
 
     X = [[runs_left, balls_left, wickets_left, current_rr, required_rr]]
