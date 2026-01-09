@@ -78,8 +78,10 @@ def live_predict(runs:int, overs:float, wickets:int, target:int):
 
     prob = live_model.predict_proba(X)[0][1]
 
-    return {
-        "Batting team win %": round(prob*100,2),
-        "Bowling team win %": round((1-prob)*100,2)
-    }
+   return {
+    "batting": round(prob*100,2),
+    "bowling": round((1-prob)*100,2)
+}
+
+
 
